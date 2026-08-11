@@ -1,0 +1,96 @@
+<header class="cabecera">
+  <h1>Préstamo de Equipos</h1>
+
+  <label class="selector-usuario">
+    Usuario:
+    <select
+      [value]="api.usuarioActualId()"
+      (change)="cambiarUsuario($any($event.target).value)">
+      @for (usuario of api.usuarios(); track usuario.id) {
+        <option [value]="usuario.id">{{ usuario.nombre }}</option>
+      }
+    </select>
+  </label>
+</header>
+
+<main>
+  @if (exito()) {
+    <p class="aviso exito">{{ exito() }}</p>
+  }
+
+  <section class="tarjeta">
+    <h2>Catálogo de equipos</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Equipo</th>
+          <th>Tipo</th>
+          <th>N.º de serie</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (equipo of api.equipos(); track equipo.id) {
+          <tr>
+            <td>{{ equipo.nombre }}</td>
+            <td>{{ equipo.tipo }}</td>
+            <td class="serie">{{ equipo.numeroSerie }}</td>
+            <td>
+              <span class="etiqueta" [class.no-disponible]="equipo.estado !== 'DISPONIBLE'">
+                {{ equipo.estado }}
+              </span>
+            </td>
+            <td class="derecha">
+              <button
+                (click)="abrirFormulario(equipo)"
+                [disabled]="equipo.estado !== 'DISPONIBLE'">
+                Reservar
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="vacio">Cargando equipos…</td></tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  @if (equipoSeleccionado(); as equipo) {
+    <section class="tarjeta formulario">
+      <h2>Reservar «{{ equipo.nombre }}»</h2>
+
+      <div class="campos">
+        <label>
+          Desde
+          <input
+            type="date"
+            [value]="fechaInicio()"
+            (input)="fechaInicio.set($any($event.target).value)">
+        </label>
+
+        <label>
+          Hasta
+          <input
+            type="date"
+            [value]="fechaFin()"
+            (input)="fechaFin.set($any($event.target).value)">
+        </label>
+      </div>
+
+      @if (error()) {
+        <p class="aviso error">{{ error() }}</p>
+      }
+
+      <div class="acciones">
+        <button class="primario" (click)="reservar()" [disabled]="enviando()">
+          {{ enviando() ? 'Enviando…' : 'Confirmar reserva' }}
+        </button>
+        <button (click)="cerrarFormulario()">Cancelar</button>
+      </div>
+    </section>
+  }
+
+  <app-mis-reservas />
+</main>

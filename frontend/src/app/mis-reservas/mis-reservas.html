@@ -1,0 +1,36 @@
+<section class="tarjeta">
+  <h2>Mis reservas</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Equipo</th>
+        <th>Desde</th>
+        <th>Hasta</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (reserva of api.reservas(); track reserva.id) {
+        <tr>
+          <td>{{ reserva.equipoNombre }}</td>
+          <td>{{ reserva.fechaInicio }}</td>
+          <td>{{ reserva.fechaFin }}</td>
+          <td>
+            <span class="etiqueta" [class.devuelta]="reserva.estado === 'DEVUELTA'">
+              {{ reserva.estado }}
+            </span>
+          </td>
+          <td class="derecha">
+            @if (reserva.estado !== 'DEVUELTA') {
+              <button (click)="devolver(reserva.id)">Devolver</button>
+            }
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="5" class="vacio">Todavía no tienes reservas.</td></tr>
+      }
+    </tbody>
+  </table>
+</section>
