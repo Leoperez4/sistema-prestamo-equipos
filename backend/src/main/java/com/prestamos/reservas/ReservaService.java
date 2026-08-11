@@ -2,6 +2,9 @@ package com.prestamos.reservas;
 
 import com.prestamos.equipos.Equipo;
 import com.prestamos.equipos.EquipoRepository;
+import com.prestamos.notificaciones.NotificacionService;
+import com.prestamos.usuarios.Usuario;
+import com.prestamos.usuarios.UsuarioRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,11 +32,17 @@ public class ReservaService {
 
     private final ReservaRepository reservaRepository;
     private final EquipoRepository equipoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final NotificacionService notificacionService;
 
     public ReservaService(ReservaRepository reservaRepository,
-                          EquipoRepository equipoRepository) {
+                          EquipoRepository equipoRepository,
+                          UsuarioRepository usuarioRepository,
+                          NotificacionService notificacionService) {
         this.reservaRepository = reservaRepository;
         this.equipoRepository = equipoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.notificacionService = notificacionService;
     }
 
     /**
@@ -89,7 +98,22 @@ public class ReservaService {
                     peticion.fechaInicio(),
                     peticion.fechaFin());
 
-            return reservaRepository.buscarPorId(id).orElseThrow();
+            Reserva creada = reservaRepository.buscarPorId(id).orElseThrow();
+
+            // 5. Notificacion. Va dentro de la transaccion por simplicidad;
+            //    el servicio captura sus propios errores, asi que un fallo de
+            //    correo nunca tumba una reserva valida. Lo ideal en produccion
+            //    seria publicarla como evento AFTER_COMMIT o encolarla, para
+            //    no alargar la transaccion ni el bloqueo del equipo.
+            usuarioRepository.buscarPorId(peticion.usuarioId()).ifPresent(
+                    (Usuario usuario) -> notificacionService.reservaCreada(
+                            usuario.email(),
+                            usuario.nombre(),
+                            equipo.nombre(),
+                            creada.fechaInicio(),
+                            creada.fechaFin()));
+
+            return creada;
 
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
