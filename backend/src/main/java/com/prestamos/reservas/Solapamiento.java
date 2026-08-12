@@ -16,9 +16,7 @@ public final class Solapamiento {
      * Dos rangos de fechas se solapan si cada uno empieza antes o el mismo
      * dia en que el otro termina.
      *
-     * Los rangos son CERRADOS en ambos extremos: el dia de devolucion
-     * cuenta como ocupado, igual que la restriccion de PostgreSQL,
-     * que usa daterange(inicio, fin, '[]').
+     * 
      */
     public static boolean seSolapan(
             LocalDate aInicio, LocalDate aFin,

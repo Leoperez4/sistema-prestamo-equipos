@@ -9,14 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Punto unico donde las excepciones se convierten en respuestas HTTP.
- *
- * Sin esto, Spring devuelve un cuerpo generico ({"error":"Conflict"})
- * y el mensaje que construimos en el servicio nunca llega al usuario.
- * El frontend necesita ese texto para poder decir "el equipo ya esta
- * reservado del X al Y" en lugar de un simple "conflicto".
- */
+
 @RestControllerAdvice
 public class ManejadorDeErrores {
 

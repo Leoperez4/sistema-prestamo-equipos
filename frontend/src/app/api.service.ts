@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-/** Espejo en TypeScript de lo que devuelve la API de Java. */
+
 export interface Usuario {
   id: number;
   nombre: string;
@@ -31,15 +31,6 @@ export interface Reserva {
 
 const API = 'http://localhost:8080/api';
 
-/**
- * Unico punto de contacto con el backend.
- *
- * Guarda tambien el estado compartido en senales, para que cualquier
- * componente que las lea se repinte solo cuando cambien.
- *
- * providedIn: 'root' significa que Angular crea una sola instancia
- * para toda la aplicacion.
- */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);

@@ -13,20 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Logica de negocio de las reservas.
- *
- * Aqui vive la solucion al reto de concurrencia, en dos capas:
- *
- *   CAPA 1 (aplicacion): bloqueo pesimista con SELECT ... FOR UPDATE
- *   sobre la fila del equipo, dentro de una transaccion. Serializa las
- *   peticiones que compiten por el mismo equipo y permite devolver un
- *   mensaje de error comprensible.
- *
- *   CAPA 2 (base de datos): la restriccion EXCLUDE de PostgreSQL, que
- *   hace fisicamente imposible almacenar dos reservas solapadas aunque
- *   la capa 1 fallara o hubiera varias instancias del backend.
- */
 @Service
 public class ReservaService {
 
@@ -59,8 +45,7 @@ public class ReservaService {
                     "La fecha de fin no puede ser anterior a la de inicio");
         }
 
-        // 2. CAPA 1: bloqueo pesimista. Si otra peticion esta reservando
-        //    este mismo equipo, la nuestra se detiene aqui y espera.
+        // 2. CAPA 1: bloqueo pesimista.
         Equipo equipo = equipoRepository.bloquearPorId(peticion.equipoId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "No existe el equipo " + peticion.equipoId()));
@@ -100,11 +85,6 @@ public class ReservaService {
 
             Reserva creada = reservaRepository.buscarPorId(id).orElseThrow();
 
-            // 5. Notificacion. Va dentro de la transaccion por simplicidad;
-            //    el servicio captura sus propios errores, asi que un fallo de
-            //    correo nunca tumba una reserva valida. Lo ideal en produccion
-            //    seria publicarla como evento AFTER_COMMIT o encolarla, para
-            //    no alargar la transaccion ni el bloqueo del equipo.
             usuarioRepository.buscarPorId(peticion.usuarioId()).ifPresent(
                     (Usuario usuario) -> notificacionService.reservaCreada(
                             usuario.email(),
@@ -119,7 +99,7 @@ public class ReservaService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Otra reserva para ese equipo y esas fechas se registro primero");
         }
-        // 5. Al salir del metodo Spring hace COMMIT y libera el bloqueo.
+        // 6. Al salir del metodo Spring hace COMMIT y libera el bloqueo.
     }
 
     @Transactional(readOnly = true)
